@@ -30,20 +30,20 @@ class DoctrineProxy
 
     /**
      * @param string $name
-     * @return EntityManager
+     * @return \Doctrine\ORM\EntityManager
      */
     public function EM($name = 'default')
     {
         if ($this->entityManagerContainer->has($name)) {
             return $this->entityManagerContainer->get($name);
         } else {
-            $name = $name == 'default' ? Config::get('doctrine.default') : $name;
-            $con = $this->getConnection($name);
-            $config = $this->createEntityManagerConfiguration();
-            $entityManager = EntityManager::create($con, $config);
-            $this->entityManagerContainer->put($name, $entityManager);
+            if ($name == 'default') {
+                $con = $this->getConnection(Config::get('doctrine.default'));
+            } else {
+                $con = $this->getConnection($name);
+            }
 
-            return $entityManager;
+            return $this->createEM($name, $con);
         }
     }
 
@@ -57,20 +57,63 @@ class DoctrineProxy
             return $this->DBALContainer->get($name);
         } else {
             $name = $name == 'default' ? Config::get('doctrine.default') : $name;
-            $con = $this->getConnection($name);
-            $config = $this->createDBALConfiguration();
-            $dbal = DriverManager::getConnection($con, $config);
-            $this->DBALContainer->put($name, $dbal);
+            if ($name == 'default') {
+                $con = $this->getConnection(Config::get('doctrine.default'));
+            } else {
+                $con = $this->getConnection($name);
+            }
 
-            return $dbal;
+            return $this->createDBAL($name, $con);
         }
+    }
+
+    /**
+     * @param $name
+     * @param $connection
+     * @return \Doctrine\ORM\EntityManager
+     * @throws \Exception
+     */
+    public function createEM($name, $connection)
+    {
+        if ($this->entityManagerContainer->has($name)) {
+            throw new \Exception('Dupplicate Doctrine Key Container');
+        }
+
+        $config = $this->createEntityManagerConfiguration();
+        $entityManager = EntityManager::create($connection, $config);
+        $this->entityManagerContainer->put($name, $entityManager);
+
+        return $entityManager;
+    }
+
+    /**
+     * @param $name
+     * @param $connection
+     * @return \Doctrine\DBAL\Connection
+     * @throws \Exception
+     */
+    public function createDBAL($name, $connection)
+    {
+        if ($this->entityManagerContainer->has($name)) {
+            throw new \Exception('Dupplicate Doctrine Key Container');
+        }
+
+        $config = $this->createDBALConfiguration();
+        $dbal = DriverManager::getConnection($connection, $config);
+        $this->DBALContainer->put($name, $dbal);
+
+        return $dbal;
     }
 
     protected function getConnection($name)
     {
-        $name = 'doctrine.connection.' . $name;
+        if (is_string($name)) {
+            $name = 'doctrine.connection.' . $name;
 
-        return Config::has($name) ? Config::get($name) : null;
+            return Config::has($name) ? Config::get($name) : null;
+        }
+
+        return $name;
     }
 
     protected function createDBALConfiguration()
