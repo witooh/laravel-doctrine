@@ -1,0 +1,21 @@
+{
+    "name": "witooh/doctrine",
+    "description": "",
+    "authors": [
+        {
+            "name": "witooh",
+            "email": "witoo@outlook.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "illuminate/support": "4.0.x",
+        "doctrine/orm": "2.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Witooh\\Doctrine": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
