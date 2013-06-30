@@ -28,30 +28,35 @@ class DoctrineProxy
         $this->DBALContainer = new Collection();
     }
 
-    public function EM($name = null)
+    /**
+     * @param string $name
+     * @return EntityManager
+     */
+    public function EM($name = 'default')
     {
-        if ($name == null) {
-            $name = Config::get('doctrine.default');
-        }
         if ($this->entityManagerContainer->has($name)) {
             return $this->entityManagerContainer->get($name);
         } else {
+            $name = $name == 'default' ? Config::get('doctrine.default') : $name;
             $con = $this->getConnection($name);
             $config = $this->createEntityManagerConfiguration();
             $entityManager = EntityManager::create($con, $config);
             $this->entityManagerContainer->put($name, $entityManager);
+
             return $entityManager;
         }
     }
 
-    public function DBAL($name = null)
+    /**
+     * @param string $name
+     * @return \Doctrine\DBAL\Connection
+     */
+    public function DBAL($name = 'default')
     {
-        if ($name == null) {
-            $name = Config::get('doctrine.default');
-        }
         if ($this->DBALContainer->has($name)) {
             return $this->DBALContainer->get($name);
         } else {
+            $name = $name == 'default' ? Config::get('doctrine.default') : $name;
             $con = $this->getConnection($name);
             $config = $this->createDBALConfiguration();
             $dbal = DriverManager::getConnection($con, $config);
