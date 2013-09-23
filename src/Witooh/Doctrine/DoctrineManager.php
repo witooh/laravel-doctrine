@@ -2,18 +2,22 @@
 
 namespace Witooh\Doctrine;
 
-
 use Config;
 use Doctrine\Common\Cache\ApcCache;
 use Doctrine\Common\Cache\FilesystemCache;
+use Doctrine\Common\Persistence\Mapping\Driver\PHPDriver;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Logging\EchoSQLLogger;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
+use Doctrine\ORM\Mapping\Driver\SimplifiedYamlDriver;
+use Doctrine\ORM\Mapping\Driver\XmlDriver;
+use Doctrine\ORM\Mapping\Driver\YamlDriver;
 use Doctrine\ORM\Tools\Setup;
 use Illuminate\Support\Collection;
 
-class DoctrineProxy
+class DoctrineManager
 {
 
     /**
@@ -25,14 +29,14 @@ class DoctrineProxy
     public function __construct()
     {
         $this->entityManagerContainer = new Collection();
-        $this->DBALContainer = new Collection();
+        $this->DBALContainer          = new Collection();
     }
 
     /**
      * @param string $name
      * @return \Doctrine\ORM\EntityManager
      */
-    public function EM($name = 'default')
+    public function em($name = 'default')
     {
         if ($this->entityManagerContainer->has($name)) {
             return $this->entityManagerContainer->get($name);
@@ -79,7 +83,7 @@ class DoctrineProxy
             throw new \Exception('Dupplicate Doctrine Key Container');
         }
 
-        $config = $this->createEntityManagerConfiguration();
+        $config        = $this->createEntityManagerConfiguration();
         $entityManager = EntityManager::create($connection, $config);
         $this->entityManagerContainer->put($name, $entityManager);
 
@@ -99,7 +103,7 @@ class DoctrineProxy
         }
 
         $config = $this->createDBALConfiguration();
-        $dbal = DriverManager::getConnection($connection, $config);
+        $dbal   = DriverManager::getConnection($connection, $config);
         $this->DBALContainer->put($name, $dbal);
 
         return $dbal;
@@ -123,25 +127,73 @@ class DoctrineProxy
         return $config;
     }
 
-    protected function createEntityManagerConfiguration()
+    /**
+     * @param \Doctrine\ORM\Configuration $config
+     * @param string $mapper
+     * @param array $metaData
+     * @param array $YAMLCongif
+     * @return \Doctrine\ORM\Configuration
+     */
+    protected function createDriver($config, $mapper, $metaData, $YAMLCongif)
     {
-        $cache = Config::get('doctrine.cache');
-        $config = Setup::createAnnotationMetadataConfiguration(
-            Config::get('doctrine.metadata'),
-            Config::get('development'),
-            Config::get('doctrine.proxyDir')
-        );
+        if ($mapper == 'php') {
+            $driver = new PHPDriver($metaData);
+        } elseif ($mapper == 'yaml') {
+//            $driver = new YamlDriver($metaData);
+            $driver = new SimplifiedYamlDriver($YAMLCongif['namespaces']);
+        } elseif ($mapper == 'xml') {
+            $driver = new XmlDriver($metaData);
+        } else {
+            $driver = $config->newDefaultAnnotationDriver($metaData);
+        }
+
+        $config->setMetadataDriverImpl($driver);
+
+        return $config;
+    }
+
+    /**
+     * @param \Doctrine\ORM\Configuration $config
+     * @param string $cache
+     * @param string $cahcePath
+     */
+    protected function createCache($config, $cache, $cahcePath)
+    {
         if ($cache == 'file') {
-            $config->setMetadataCacheImpl(new FilesystemCache('../app/cache/storage'));
-            $config->setQueryCacheImpl(new FilesystemCache('../app/cache/storage'));
+            $config->setMetadataCacheImpl(new FilesystemCache($cahcePath));
+            $config->setQueryCacheImpl(new FilesystemCache($cahcePath));
         } elseif ($cache == 'apc') {
             $config->setMetadataCacheImpl(new ApcCache());
             $config->setQueryCacheImpl(new ApcCache());
         }
-        if (Config::get('doctrine.sqlLogger')) {
+    }
+
+    protected function createEntityManagerConfiguration()
+    {
+        $pkgConfig  = Config::get("doctrine");
+        $cache      = $pkgConfig['cache'];
+        $mapper     = $pkgConfig['mapper'];
+        $metaData   = $pkgConfig['metadata'];
+        $dev        = $pkgConfig['development'];
+        $proxyDir   = $pkgConfig['proxyDir'];
+        $cahcePath  = app_path() . '/storage/cache';
+        $sqlLogger  = $pkgConfig['sqlLogger'];
+        $autoProxy  = $pkgConfig['autoGenerateProxy'];
+        $YAMLCongif = $pkgConfig['yaml'];
+
+        $config = SetUp::createConfiguration(
+            $dev,
+            $proxyDir
+        );
+
+        $this->createDriver($config, $mapper, $metaData, $YAMLCongif);
+        $this->createCache($config, $cache, $cahcePath);
+
+        if ($sqlLogger) {
             $config->setSQLLogger(new EchoSQLLogger());
         }
-        $config->setAutoGenerateProxyClasses(Config::get('doctrine.autiGenerateProxy'));
+
+        $config->setAutoGenerateProxyClasses($autoProxy);
 
         return $config;
     }

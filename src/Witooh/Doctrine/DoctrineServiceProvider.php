@@ -24,15 +24,14 @@ class DoctrineServiceProvider extends ServiceProvider {
 	{
         $this->app->singleton('doctrine',
             function ($app) {
-                $doctrine = new DoctrineProxy();
-                $doctrine->EM();
+                $doctrine = new DoctrineManager();
                 return $doctrine;
             }
         );
 
         $this->app->singleton('doctrine.metadata-factory',
             function ($app) {
-                return $app['doctrine']->EM()->getMetadataFactory();
+                return $app['doctrine']->em()->getMetadataFactory();
             }
         );
         $this->app->singleton('doctrine.metadata',
@@ -42,7 +41,7 @@ class DoctrineServiceProvider extends ServiceProvider {
         );
         $this->app->bind('doctrine.schema-tool',
             function ($app) {
-                return new SchemaTool($app['doctrine']->EM());
+                return new SchemaTool($app['doctrine']->em());
             }
         );
         //
@@ -50,17 +49,17 @@ class DoctrineServiceProvider extends ServiceProvider {
         //
         $this->app->bind('doctrine.schema.create',
             function ($app) {
-                return new CreateSchemaCommand($app['doctrine']->EM());
+                return new CreateSchemaCommand($app['doctrine']->em());
             }
         );
         $this->app->bind('doctrine.schema.update',
             function ($app) {
-                return new UpdateSchemaCommand($app['doctrine']->EM());
+                return new UpdateSchemaCommand($app['doctrine']->em());
             }
         );
         $this->app->bind('doctrine.schema.drop',
             function ($app) {
-                return new DropSchemaCommand($app['doctrine']->EM());
+                return new DropSchemaCommand($app['doctrine']->em());
             }
         );
         $this->commands(
