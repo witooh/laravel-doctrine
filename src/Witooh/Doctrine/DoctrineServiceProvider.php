@@ -1,5 +1,6 @@
 <?php namespace Witooh\Doctrine;
 
+use Doctrine\ORM\Tools\Console\Command\GenerateEntitiesCommand;
 use Illuminate\Support\ServiceProvider;
 use Doctrine\ORM\Tools\SchemaTool;
 use Witooh\Doctrine\Console\CreateSchemaCommand;
@@ -22,7 +23,7 @@ class DoctrineServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-        $this->app->singleton('doctrine',
+        $this->app->singleton('Witooh\Doctrine\DoctrineManager',
             function ($app) {
                 $doctrine = new DoctrineManager();
                 return $doctrine;
@@ -31,7 +32,7 @@ class DoctrineServiceProvider extends ServiceProvider {
 
         $this->app->singleton('doctrine.metadata-factory',
             function ($app) {
-                return $app['doctrine']->em()->getMetadataFactory();
+                return $app['Witooh\Doctrine\DoctrineManager']->em()->getMetadataFactory();
             }
         );
         $this->app->singleton('doctrine.metadata',
@@ -41,7 +42,7 @@ class DoctrineServiceProvider extends ServiceProvider {
         );
         $this->app->bind('doctrine.schema-tool',
             function ($app) {
-                return new SchemaTool($app['doctrine']->em());
+                return new SchemaTool($app['Witooh\Doctrine\DoctrineManager']->em());
             }
         );
         //
@@ -49,17 +50,17 @@ class DoctrineServiceProvider extends ServiceProvider {
         //
         $this->app->bind('doctrine.schema.create',
             function ($app) {
-                return new CreateSchemaCommand($app['doctrine']->em());
+                return new CreateSchemaCommand($app['Witooh\Doctrine\DoctrineManager']->em());
             }
         );
         $this->app->bind('doctrine.schema.update',
             function ($app) {
-                return new UpdateSchemaCommand($app['doctrine']->em());
+                return new UpdateSchemaCommand($app['Witooh\Doctrine\DoctrineManager']->em());
             }
         );
         $this->app->bind('doctrine.schema.drop',
             function ($app) {
-                return new DropSchemaCommand($app['doctrine']->em());
+                return new DropSchemaCommand($app['Witooh\Doctrine\DoctrineManager']->em());
             }
         );
         $this->commands(

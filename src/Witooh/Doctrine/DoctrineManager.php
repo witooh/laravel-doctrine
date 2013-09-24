@@ -5,6 +5,7 @@ namespace Witooh\Doctrine;
 use Config;
 use Doctrine\Common\Cache\ApcCache;
 use Doctrine\Common\Cache\FilesystemCache;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\Mapping\Driver\PHPDriver;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DriverManager;
@@ -196,5 +197,13 @@ class DoctrineManager
         $config->setAutoGenerateProxyClasses($autoProxy);
 
         return $config;
+    }
+
+    /**
+     * @return Criteria
+     */
+    public function createCriteria()
+    {
+        return Criteria::create();
     }
 }
