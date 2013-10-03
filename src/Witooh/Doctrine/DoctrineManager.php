@@ -140,8 +140,8 @@ class DoctrineManager
         if ($mapper == 'php') {
             $driver = new PHPDriver($metaData);
         } elseif ($mapper == 'yaml') {
-//            $driver = new YamlDriver($metaData);
-            $driver = new SimplifiedYamlDriver($YAMLCongif['namespaces']);
+            $driver = new YamlDriver($metaData);
+//            $driver = new SimplifiedYamlDriver($YAMLCongif['namespaces']);
         } elseif ($mapper == 'xml') {
             $driver = new XmlDriver($metaData);
         } else {

@@ -1,31 +1,39 @@
 <?php namespace Witooh\Doctrine;
 
-use Doctrine\ORM\Tools\Console\Command\GenerateEntitiesCommand;
 use Illuminate\Support\ServiceProvider;
 use Doctrine\ORM\Tools\SchemaTool;
+use Doctrine\DBAL\Types\Type;
 use Witooh\Doctrine\Console\CreateSchemaCommand;
 use Witooh\Doctrine\Console\UpdateSchemaCommand;
 use Witooh\Doctrine\Console\DropSchemaCommand;
 
-class DoctrineServiceProvider extends ServiceProvider {
+class DoctrineServiceProvider extends ServiceProvider
+{
 
-	/**
-	 * Indicates if loading of the provider is deferred.
-	 *
-	 * @var bool
-	 */
-	protected $defer = false;
+    /**
+     * Indicates if loading of the provider is deferred.
+     *
+     * @var bool
+     */
+    protected $defer = false;
 
-	/**
-	 * Register the service provider.
-	 *
-	 * @return void
-	 */
-	public function register()
-	{
+    public function boot()
+    {
+        Type::addType('cdatetime', 'Witooh\Doctrine\Types\CDateTimeType');
+        Type::addType('cdate', 'Witooh\Doctrine\Types\CDateType');
+    }
+
+    /**
+     * Register the service provider.
+     *
+     * @return void
+     */
+    public function register()
+    {
         $this->app->singleton('Witooh\Doctrine\DoctrineManager',
             function ($app) {
                 $doctrine = new DoctrineManager();
+
                 return $doctrine;
             }
         );
@@ -68,16 +76,16 @@ class DoctrineServiceProvider extends ServiceProvider {
             'doctrine.schema.update',
             'doctrine.schema.drop'
         );
-	}
+    }
 
-	/**
-	 * Get the services provided by the provider.
-	 *
-	 * @return array
-	 */
-	public function provides()
-	{
-		return array();
-	}
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array
+     */
+    public function provides()
+    {
+        return array();
+    }
 
 }
